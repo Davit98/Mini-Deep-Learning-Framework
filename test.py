@@ -5,21 +5,9 @@ import math
 matplotlib.style.use('ggplot')
 torch.set_grad_enabled(False)
 
+from Utilities import generate_disc_set, compute_nb_errors
 from Loss import Loss, MSE
 from Module import DenseLayer, ReLU, Sequential, Tanh
-
-def generate_disc_set(nb):
-    data = torch.FloatTensor(nb, 2).uniform_(0, 1)
-    target = torch.zeros(nb, 2)
-
-    for i in range(nb):
-        if (data[i, 0] - 0.5) * (data[i, 0] - 0.5) + \
-                (data[i, 1] - 0.5) * (data[i, 1] - 0.5) <= 1 / (2 * math.pi):
-            target[i, 1] = 1
-        else:
-            target[i, 0] = 1
-
-    return data, target
 
 
 train_size = 1000
@@ -28,16 +16,16 @@ test_size = 1000
 train_data, train_target = generate_disc_set(train_size)
 test_data, test_target = generate_disc_set(test_size)
 
-# plt.figure(figsize=(6,6))
-# plt.scatter(train_data[:, 0], train_data[:, 1], c=train_target[:, 0].numpy(), edgecolors='none')
-# plt.title('Training Data')
-# plt.show()
-#
-#
-# plt.figure(figsize=(6,6))
-# plt.scatter(test_data[:, 0], test_data[:, 1], c=test_target[:, 0].numpy(), edgecolors='none')
-# plt.title('Test Data')
-# plt.show()
+plt.figure(figsize=(6,6))
+plt.scatter(train_data[:, 0], train_data[:, 1], c=train_target[:, 0].numpy(), edgecolors='none')
+plt.title('Training Data')
+plt.show()
+
+
+plt.figure(figsize=(6,6))
+plt.scatter(test_data[:, 0], test_data[:, 1], c=test_target[:, 0].numpy(), edgecolors='none')
+plt.title('Test Data')
+plt.show()
 
 net_loss = MSE()
 
@@ -64,30 +52,6 @@ def sgd(x, dx, config):
             cur_x.add_(-cur_old_grad)
 
 
-def get_batches(X, Y, batch_size):
-    n_samples = X.shape[0]
-
-    # shuffle
-    indices = torch.randperm(n_samples)
-
-    for start in range(0, n_samples, batch_size):
-        end = min(start + batch_size, n_samples)
-
-        batch_idx = indices[start:end]
-
-        yield X[batch_idx], Y[batch_idx]
-
-
-def compute_nb_errors(output, data_target):
-    nb_errors = 0
-
-    output = output.max(1).indices
-    target = data_target.max(1).indices
-    nb_errors += int((output != target).sum())
-
-    return nb_errors
-
-
 optimizer_config = {'learning_rate': 0.005}
 n_epoch = 60
 batch_size = 64
@@ -112,52 +76,30 @@ for i in range(n_epoch):
             optimizer_config)
     loss_history.append(loss)
 
-    # Visualize
-    plt.figure(figsize=(8, 6))
-
-    plt.title("Training loss")
-    plt.xlabel("#iteration")
-    plt.ylabel("loss")
-    plt.plot(loss_history, 'b')
-    plt.show()
-
     print('Current loss: %f' % loss)
 
-res = []
+train_res = []
 for i in range(0, 1000):
-    res.append(net.forward(train_data[i]).view(1, -1))
-res = torch.cat(res, 0)
-print("Number of errors on a train set: " + str(compute_nb_errors(res, train_target)))
+    train_res.append(net.forward(train_data[i]).view(1, -1))
+train_res = torch.cat(train_res, 0)
+print("Number of errors on a train set: " + str(compute_nb_errors(train_res, train_target)))
+train_res = train_res.max(1).indices
+train_res[train_res != train_target.max(1).indices] = 2
 
-res = []
+test_res = []
 for i in range(0, 1000):
-    res.append(net.forward(test_data[i]).view(1, -1))
-res = torch.cat(res, 0)
-print("Number of errors on a test set: " + str(compute_nb_errors(res, test_target)))
-# net.forward(test_data)
-#
-# mse = MSE()
-# print(mse.update_output(X_train, Y_train))
-# print(mse.update_output(X_test, Y_test))
-#
-#
-# x1, x2 = torch.meshgrid(torch.linspace(0, 1), torch.linspace(0, 1))
-# x1_flat = x1.flatten()
-# x2_flat = x2.flatten()
-#
-# x_full = torch.stack([x1_flat, x2_flat]).T
-# c = torch.argmax(net.forward(x_full), axis=1).reshape(x1.shape)
-#
-# plt.figure(figsize=(6, 6))
-# plt.scatter(x1, x2, c=c)
-# plt.scatter(X_train[:, 0], X_train[:, 1], c=torch.argmax(Y_train, axis=1), edgecolors="none", s=5)
-# plt.title('On Train Data')
-# plt.show()
-#
-# # %%
-#
-# plt.figure(figsize=(6, 6))
-# plt.scatter(x1, x2, c=c)
-# plt.scatter(X_test[:, 0], X_test[:, 1], c=torch.argmax(Y_test, axis=1), edgecolors="none", s=5)
-# plt.title('On Test Data')
-# plt.show()
+    test_res.append(net.forward(test_data[i]).view(1, -1))
+test_res = torch.cat(test_res, 0)
+print("Number of errors on a test set: " + str(compute_nb_errors(test_res, test_target)))
+test_res = test_res.max(1).indices
+test_res[test_res != test_target.max(1).indices] = 2
+
+plt.figure(figsize=(6, 6))
+plt.scatter(train_data[:, 0], train_data[:, 1], c=train_res, edgecolors="none")
+plt.title('On Train Data')
+plt.show()
+
+plt.figure(figsize=(6, 6))
+plt.scatter(test_data[:, 0], test_data[:, 1], c=test_res, edgecolors="none")
+plt.title('On Test Data')
+plt.show()
