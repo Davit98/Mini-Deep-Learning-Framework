@@ -68,7 +68,7 @@ for i in range(n_epoch):
 
         # Backward
         lg = net_loss.backward(pred, train_target[i])
-        net.backward(train_data[i], lg)
+        net.backward(lg)
 
         # Update weights
         sgd(net.get_params(),

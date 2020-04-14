@@ -51,34 +51,23 @@ class Sequential(Module):
         self.modules.append(module)
 
     def update_output(self, inpt):
-        self.y = []
+        self.y = [inpt]
 
-        self.y.append(self.modules[0].forward(inpt))
-        for i in range(1, len(self.modules)):
-            self.y.append(self.modules[i].forward(self.y[i - 1]))
+        for i in range(0, len(self.modules)):
+            self.y.append(self.modules[i].forward(self.y[i]))
 
         self.output = self.y[-1]
 
         return self.output
 
-    def backward(self, inpt, grad_output):
-        # # TODO we need to save input for this
-        # g_n = grad_output
-        #
-        # for i in range(len(self.modules) - 1, -1, -1):
-        #     g_p = self.modules[i].backward(self.y[i - 1], g_n)
-        #     g_n = g_p
-        #
-        # return g_n
-
+    def backward(self, grad_output):
         n = len(self.modules)
-        g_n = self.modules[n - 1].backward(self.y[n - 2], grad_output)
+        grad = grad_output
 
-        for i in range(n - 2, 0, -1):
-            g_p = self.modules[i].backward(self.y[i - 1], g_n)
-            g_n = g_p
+        for i in range(n - 1, -1, -1):
+            grad = self.modules[i].backward(self.y[i], grad)
 
-        self.grad_input = self.modules[0].backward(inpt, g_n)
+        self.grad_input = grad
         return self.grad_input
 
     def zero_grad_params(self):
@@ -104,8 +93,8 @@ class DenseLayer(Module):
 
         # Initializing weights
         stdv = 1. / math.sqrt(n_in)
-        self.W = torch.FloatTensor(n_out, n_in).uniform_(0, stdv)
-        self.b = torch.FloatTensor(n_out).uniform_(0, stdv).view(-1, 1)
+        self.W = torch.FloatTensor(n_out, n_in).uniform_(-stdv, stdv)
+        self.b = torch.FloatTensor(n_out).uniform_(-stdv, stdv).view(-1, 1)
 
         self.gradW = torch.zeros_like(self.W)
         self.gradb = torch.zeros_like(self.b)
