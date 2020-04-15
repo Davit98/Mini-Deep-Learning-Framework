@@ -47,6 +47,13 @@ class Sequential(Module):
         self.modules = []
         self.y = []
 
+    def __init__(self, *args):
+        super(Sequential, self).__init__()
+        self.modules = []
+        self.y = []
+        for module in args:
+            self.modules.append(module)
+
     def add(self, module):
         self.modules.append(module)
 
@@ -111,17 +118,6 @@ class DenseLayer(Module):
         for grad, inp in zip(grad_output, inpt):
             self.gradW += grad.unsqueeze(1) * inp / grad_output.shape[0]
         self.gradb = grad_output.sum(axis=0) / grad_output.shape[0]
-    # def update_output(self, inpt):
-    #     self.output = self.W.mm(inpt.T).T + self.b
-    #     return self.output
-    #
-    # def update_grad_input(self, inpt, grad_output):
-    #     self.grad_input = self.W.T.mm(grad_output.T).T
-    #     return self.grad_input
-    #
-    # def acc_grad_params(self, inpt, grad_output):
-    #     self.gradW = grad_output.T.mm(inpt)
-    #     self.gradb = grad_output.sum(axis=0) / grad_output.shape[0]
 
     def zero_grad_params(self):
         self.gradW = torch.zeros_like(self.gradW)
@@ -165,13 +161,8 @@ class Tanh(Module):
         return self.output
 
     def update_grad_input(self, inpt, grad_output):
-        self.grad_input = (1 - self.output ** 2) * grad_output
+        self.grad_input = (1 - inpt.tanh() ** 2) * grad_output
         return self.grad_input
-
-    # Another way
-    # def update_grad_input(self, inpt, grad_output):
-    #     self.grad_input = 4 * (inpt.exp() + inpt.mul(-1).exp()).pow(-2) * grad_output
-    #     return self.grad_input
 
     def __repr__(self):
         return "Tanh"

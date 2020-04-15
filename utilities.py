@@ -25,8 +25,7 @@ def get_batches(X, Y, batch_size):
     for start in range(0, n_samples, batch_size):
         end = min(start + batch_size, n_samples)
 
-        batch_idx = [x for x in range(start, end)]
-        # batch_idx = indices[start:end]
+        batch_idx = indices[start:end]
 
         yield X[batch_idx], Y[batch_idx]
 
@@ -34,8 +33,8 @@ def get_batches(X, Y, batch_size):
 def compute_nb_errors(output, data_target):
     nb_errors = 0
 
-    output = output.max(1).indices
-    target = data_target.max(1).indices
+    output = output.argmax(1)
+    target = data_target.argmax(1)
     nb_errors += int((output != target).sum())
 
     return nb_errors

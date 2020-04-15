@@ -5,9 +5,9 @@ import math
 matplotlib.style.use('ggplot')
 torch.set_grad_enabled(False)
 
-from Utilities import generate_disc_set, compute_nb_errors, get_batches
-from Loss import Loss, MSE
-from Module import DenseLayer, ReLU, Sequential, Tanh
+from utilities import generate_disc_set, compute_nb_errors, get_batches
+from loss import Loss, MSE
+from module import DenseLayer, ReLU, Sequential, Tanh
 
 
 train_size = 1000
@@ -29,13 +29,11 @@ plt.show()
 
 net_loss = MSE()
 
-net = Sequential()
-net.add(DenseLayer(2, 50))
-net.add(ReLU())
-net.add(DenseLayer(50, 50))
-net.add(ReLU())
-net.add(DenseLayer(50, 2))
-
+net = Sequential(DenseLayer(2, 50),
+                 ReLU(),
+                 DenseLayer(50, 50),
+                 ReLU(),
+                 DenseLayer(50, 2))
 print(net)
 
 
@@ -53,7 +51,7 @@ def sgd(x, dx, config):
 
 optimizer_config = {'learning_rate': 0.005}
 n_epoch = 60
-batch_size = 10
+batch_size = 1
 loss_history = []
 plot_loss = True
 
@@ -112,13 +110,13 @@ for i in range(n_epoch):
 
 train_res = net.forward(train_data)
 print("Number of errors on a train set: " + str(compute_nb_errors(train_res, train_target)))
-train_res = train_res.max(1).indices
-train_res[train_res != train_target.max(1).indices] = 2
+train_res = train_res.argmax(1)
+train_res[train_res != train_target.argmax(1)] = 2
 
 test_res = net.forward(test_data)
 print("Number of errors on a test set: " + str(compute_nb_errors(test_res, test_target)))
-test_res = test_res.max(1).indices
-test_res[test_res != test_target.max(1).indices] = 2
+test_res = test_res.argmax(1)
+test_res[test_res != test_target.argmax(1)] = 2
 
 plt.figure(figsize=(6, 6))
 plt.scatter(train_data[:, 0], train_data[:, 1], c=train_res, edgecolors="none")
