@@ -5,7 +5,7 @@ import math
 matplotlib.style.use('ggplot')
 torch.set_grad_enabled(False)
 
-from Utilities import generate_disc_set, compute_nb_errors
+from Utilities import generate_disc_set, compute_nb_errors, get_batches
 from Loss import Loss, MSE
 from Module import DenseLayer, ReLU, Sequential, Tanh
 
@@ -30,12 +30,11 @@ plt.show()
 net_loss = MSE()
 
 net = Sequential()
-net.add(DenseLayer(2, 25))
+net.add(DenseLayer(2, 50))
 net.add(ReLU())
-net.add(DenseLayer(25, 25))
+net.add(DenseLayer(50, 50))
 net.add(ReLU())
-net.add(DenseLayer(25, 2))
-net.add(ReLU())
+net.add(DenseLayer(50, 2))
 
 print(net)
 
@@ -54,42 +53,69 @@ def sgd(x, dx, config):
 
 optimizer_config = {'learning_rate': 0.005}
 n_epoch = 60
-batch_size = 64
+batch_size = 10
 loss_history = []
+plot_loss = True
 
 for i in range(n_epoch):
     loss = 0
-    for i in range(0, 1000):
+    for x_batch, y_batch in get_batches(train_data, train_target, batch_size):
         net.zero_grad_params()
 
         # Forward
-        pred = net.forward(train_data[i])
-        loss += net_loss.forward(pred, train_target[i])
+        pred = net.forward(x_batch)
+        loss += net_loss.forward(pred, y_batch)
 
         # Backward
-        lg = net_loss.backward(pred, train_target[i])
+        lg = net_loss.backward(pred, y_batch)
         net.backward(lg)
 
         # Update weights
         sgd(net.get_params(),
             net.get_grad_params(),
             optimizer_config)
+
     loss_history.append(loss)
+
+    # if plot_loss:
+    #     # Visualize
+    #     plt.figure(figsize=(8, 6))
+    #
+    #     plt.title("Training loss")
+    #     plt.xlabel("#iteration")
+    #     plt.ylabel("loss")
+    #     plt.plot(loss_history, 'b')
+    #     plt.show()
 
     print('Current loss: %f' % loss)
 
-train_res = []
-for i in range(0, 1000):
-    train_res.append(net.forward(train_data[i]).view(1, -1))
-train_res = torch.cat(train_res, 0)
+# for i in range(n_epoch):
+#     loss = 0
+#     for i in range(0, 1000):
+#         net.zero_grad_params()
+#
+#         # Forward
+#         pred = net.forward(train_data[i])
+#         loss += net_loss.forward(pred, train_target[i])
+#
+#         # Backward
+#         lg = net_loss.backward(pred, train_target[i])
+#         net.backward(lg)
+#
+#         # Update weights
+#         sgd(net.get_params(),
+#             net.get_grad_params(),
+#             optimizer_config)
+#     loss_history.append(loss)
+#
+#     print('Current loss: %f' % loss)
+
+train_res = net.forward(train_data)
 print("Number of errors on a train set: " + str(compute_nb_errors(train_res, train_target)))
 train_res = train_res.max(1).indices
 train_res[train_res != train_target.max(1).indices] = 2
 
-test_res = []
-for i in range(0, 1000):
-    test_res.append(net.forward(test_data[i]).view(1, -1))
-test_res = torch.cat(test_res, 0)
+test_res = net.forward(test_data)
 print("Number of errors on a test set: " + str(compute_nb_errors(test_res, test_target)))
 test_res = test_res.max(1).indices
 test_res[test_res != test_target.max(1).indices] = 2

@@ -94,22 +94,34 @@ class DenseLayer(Module):
         # Initializing weights
         stdv = 1. / math.sqrt(n_in)
         self.W = torch.FloatTensor(n_out, n_in).uniform_(-stdv, stdv)
-        self.b = torch.FloatTensor(n_out).uniform_(-stdv, stdv).view(-1, 1)
+        self.b = torch.FloatTensor(n_out).uniform_(-stdv, stdv)
 
         self.gradW = torch.zeros_like(self.W)
         self.gradb = torch.zeros_like(self.b)
 
     def update_output(self, inpt):
-        self.output = self.W.mm(inpt.view(-1, 1)) + self.b
+        self.output = inpt.mm(self.W.T) + self.b
         return self.output
 
     def update_grad_input(self, inpt, grad_output):
-        self.grad_input = self.W.t().mm(grad_output)
+        self.grad_input = grad_output.mm(self.W)
         return self.grad_input
 
     def acc_grad_params(self, inpt, grad_output):
-        self.gradW = grad_output.view(-1, 1).mm(inpt.view(1, -1))
-        self.gradb = grad_output
+        for grad, inp in zip(grad_output, inpt):
+            self.gradW += grad.unsqueeze(1) * inp / grad_output.shape[0]
+        self.gradb = grad_output.sum(axis=0) / grad_output.shape[0]
+    # def update_output(self, inpt):
+    #     self.output = self.W.mm(inpt.T).T + self.b
+    #     return self.output
+    #
+    # def update_grad_input(self, inpt, grad_output):
+    #     self.grad_input = self.W.T.mm(grad_output.T).T
+    #     return self.grad_input
+    #
+    # def acc_grad_params(self, inpt, grad_output):
+    #     self.gradW = grad_output.T.mm(inpt)
+    #     self.gradb = grad_output.sum(axis=0) / grad_output.shape[0]
 
     def zero_grad_params(self):
         self.gradW = torch.zeros_like(self.gradW)

@@ -27,11 +27,11 @@ class MSE(Loss):
         super(MSE, self).__init__()
 
     def update_output(self, inpt, target):
-        self.output = torch.sum((target.view(-1, 1) - inpt) ** 2) / inpt.shape[0]
+        self.output = torch.sum((target - inpt) ** 2) / inpt.shape[0]
         return self.output
 
     def update_grad_input(self, inpt, target):
-        self.grad_input = -2 * (target.view(-1, 1) - inpt) / inpt.shape[0]
+        self.grad_input = -2 * (target - inpt) / inpt.shape[0]
         return self.grad_input
 
     def __repr__(self):
