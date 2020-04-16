@@ -214,7 +214,7 @@ class Tanh(Module):
 
 class Sigmoid(Module):
     def __init__(self):
-         super(Sigmoid, self).__init__()
+        super(Sigmoid, self).__init__()
     
     def update_output(self, inpt):
         self.output = 1/(1+torch.exp(-inpt))
@@ -230,7 +230,7 @@ class Sigmoid(Module):
 
 class SoftMax(Module):
     def __init__(self):
-         super(SoftMax, self).__init__()
+        super(SoftMax, self).__init__()
     
     def update_output(self, inpt):
         x = torch.exp(inpt - torch.max(inpt))
