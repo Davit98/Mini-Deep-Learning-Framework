@@ -226,3 +226,20 @@ class Sigmoid(Module):
 
     def __repr__(self):
         return "Sigmoid"
+
+
+class SoftMax(Module):
+    def __init__(self):
+         super(SoftMax, self).__init__()
+    
+    def update_output(self, inpt):
+        x = torch.exp(inpt - torch.max(inpt))
+        self.output = x / (x.sum(axis=1).reshape(-1,1))
+        return self.output
+    
+    def update_grad_input(self, inpt, grad_output): 
+        self.grad_input = self.output * (grad_output - torch.sum(self.output*grad_output,axis=1).reshape(inpt.shape[0],1))  
+        return self.grad_input
+    
+    def __repr__(self):
+        return "SoftMax"

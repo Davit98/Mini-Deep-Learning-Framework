@@ -7,8 +7,7 @@ def generate_disc_set(nb):
     target = torch.zeros(nb, 2)
 
     for i in range(nb):
-        if (data[i, 0] - 0.5) * (data[i, 0] - 0.5) + \
-                (data[i, 1] - 0.5) * (data[i, 1] - 0.5) <= 1 / (2 * math.pi):
+        if ((data[i, 0] - 0.5)**2 + (data[i, 1] - 0.5)**2) <= 1 / (2 * math.pi):
             target[i, 1] = 1
         else:
             target[i, 0] = 1
