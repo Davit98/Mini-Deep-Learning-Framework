@@ -201,7 +201,7 @@ class Tanh(Module):
         super(Tanh, self).__init__()
 
     def update_output(self, inpt):
-        self.output = inpt.tanh()
+        self.output = 2/(1+torch.exp(-2*inpt)) - 1
         return self.output
 
     def update_grad_input(self, inpt, grad_output):
@@ -210,3 +210,19 @@ class Tanh(Module):
 
     def __repr__(self):
         return "Tanh"
+
+
+class Sigmoid(Module):
+    def __init__(self):
+         super(Sigmoid, self).__init__()
+    
+    def update_output(self, inpt):
+        self.output = 1/(1+torch.exp(-inpt))
+        return self.output
+    
+    def update_grad_input(self, inpt, grad_output):
+        self.grad_input = grad_output*self.output*(1-self.output)
+        return self.grad_input
+
+    def __repr__(self):
+        return "Sigmoid"
