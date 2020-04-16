@@ -2,46 +2,76 @@ import torch
 import math
 
 
-# Main class from which other layer classes inherit
 class Module(object):
+    """
+    An abstract class which defines the necessary methods for training a neural network.
+    """
+
     def __init__(self):
         self.output = None
         self.grad_input = None
 
     def forward(self, inpt):
+        """
+        Forward pass.
+        """
         return self.update_output(inpt)
 
     def backward(self, inpt, grad_output):
+        """
+        Backward pass.
+        """
         self.update_grad_input(inpt, grad_output)
         self.acc_grad_params(inpt, grad_output)
         return self.grad_input
 
     def update_output(self, inpt):
+        """
+        Compute the output using the given input and module's parameters.
+        """
         pass
 
     def update_grad_input(self, inpt, grad_output):
-        # gradient with respect to input
+        """
+        Compute the gradient of the module with respect to its input.
+        """
         pass
 
     def acc_grad_params(self, inpt, grad_output):
-        # gradient with respect to parameters
+        """
+        Compute the gradient of the module with respect to its parameters.
+        """
         pass
 
     def zero_grad_params(self):
+        """
+        Zero grad parameters.
+        """
         pass
 
     def get_params(self):
+        """
+        Return a list of the parameters. 
+        If the module does not have parameters, return an empty list.
+        """
         return []
 
     def get_grad_params(self):
+        """
+        Return a list of the gradents with respect to the parameters.
+        If the module does not have parameters, return an empty list.
+        """
         return []
 
     def __repr__(self):
         return "Module"
 
 
-# Container class
 class Sequential(Module):
+    """
+    A container class of modules which processes input data sequentially.
+    """
+
     def __init__(self):
         super(Sequential, self).__init__()
         self.modules = []
@@ -55,9 +85,15 @@ class Sequential(Module):
             self.modules.append(module)
 
     def add(self, module):
+        """
+        Add a module to the container.
+        """
         self.modules.append(module)
 
     def update_output(self, inpt):
+        """
+        Forward input data sequentially by each module.
+        """
         self.y = [inpt]
 
         for i in range(0, len(self.modules)):
@@ -68,6 +104,9 @@ class Sequential(Module):
         return self.output
 
     def backward(self, grad_output):
+        """
+        Backward output of the network sequentially through each module.
+        """
         n = len(self.modules)
         grad = grad_output
 
@@ -95,10 +134,15 @@ class Sequential(Module):
 
 
 class DenseLayer(Module):
+    """
+    A class implementing fully-connected layer.
+    Accepts 2D input of shape (n_samples, n_feature).
+    """
+
     def __init__(self, n_in, n_out):
         super(DenseLayer, self).__init__()
 
-        # Initializing weights
+        # Initializing weights (like Pytorch)
         stdv = 1. / math.sqrt(n_in)
         self.W = torch.FloatTensor(n_out, n_in).uniform_(-stdv, stdv)
         self.b = torch.FloatTensor(n_out).uniform_(-stdv, stdv)
@@ -161,7 +205,7 @@ class Tanh(Module):
         return self.output
 
     def update_grad_input(self, inpt, grad_output):
-        self.grad_input = (1 - inpt.tanh() ** 2) * grad_output
+        self.grad_input = (1 - self.output ** 2) * grad_output
         return self.grad_input
 
     def __repr__(self):
