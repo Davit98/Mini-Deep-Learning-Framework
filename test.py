@@ -2,6 +2,7 @@ import torch
 import matplotlib
 import matplotlib.pyplot as plt
 import math
+from IPython import display
 matplotlib.style.use('ggplot')
 torch.set_grad_enabled(False)
 
@@ -16,16 +17,16 @@ test_size = 1000
 train_data, train_target = generate_disc_set(train_size)
 test_data, test_target = generate_disc_set(test_size)
 
-plt.figure(figsize=(6,6))
+plt.figure(1,figsize=(6,6))
 plt.scatter(train_data[:, 0], train_data[:, 1], c=train_target[:, 0].numpy(), edgecolors='none')
 plt.title('Training Data')
-plt.show()
+plt.pause(1)
+plt.show(block=False)
 
-
-plt.figure(figsize=(6,6))
-plt.scatter(test_data[:, 0], test_data[:, 1], c=test_target[:, 0].numpy(), edgecolors='none')
-plt.title('Test Data')
-plt.show()
+# plt.figure(figsize=(6,6))
+# plt.scatter(test_data[:, 0], test_data[:, 1], c=test_target[:, 0].numpy(), edgecolors='none')
+# plt.title('Test Data')
+# plt.show()
 
 net_loss = MSE()
 
@@ -49,81 +50,76 @@ def sgd(x, dx, config):
             cur_x.add_(-cur_old_grad)
 
 
-optimizer_config = {'learning_rate': 0.005}
-n_epoch = 60
-batch_size = 1
-loss_history = []
-plot_loss = True
+def train_model(model, model_loss, train_data, train_target, lr=0.005, batch_size=1, n_epoch=60):
+    optimizer_config = {'learning_rate': lr}
+    train_loss_history = []
+    test_loss_history = []
+    
+    for i in range(n_epoch):
+        loss = 0
+        
+        k = 0
+        for x_batch, y_batch in get_batches(train_data, train_target, batch_size):
+            model.zero_grad_params()
 
-for i in range(n_epoch):
-    loss = 0
-    for x_batch, y_batch in get_batches(train_data, train_target, batch_size):
-        net.zero_grad_params()
+            # Forward
+            pred = model.forward(x_batch)
+            loss += model_loss.forward(pred, y_batch)
+            
+            # Backward
+            lg = model_loss.backward(pred, y_batch)
+            model.backward(lg)
+            
+            # Update weights
+            sgd(net.get_params(), 
+                net.get_grad_params(), 
+                optimizer_config)  
+            k+=1
+        
+        train_loss_history.append(loss/k)
+        
+        test_pred = model.forward(test_data)
+        test_loss = model_loss.forward(test_pred, test_target)
+        test_loss_history.append(test_loss)
 
-        # Forward
-        pred = net.forward(x_batch)
-        loss += net_loss.forward(pred, y_batch)
+        print('Current train loss: {:.4f}'.format(loss.item()/k))
 
-        # Backward
-        lg = net_loss.backward(pred, y_batch)
-        net.backward(lg)
+    return train_loss_history, test_loss_history
 
-        # Update weights
-        sgd(net.get_params(),
-            net.get_grad_params(),
-            optimizer_config)
 
-    loss_history.append(loss)
+print('Training started...')
+train_loss_history, test_loss_history = train_model(net, net_loss, train_data, train_target, n_epoch=50)
 
-    # if plot_loss:
-    #     # Visualize
-    #     plt.figure(figsize=(8, 6))
-    #
-    #     plt.title("Training loss")
-    #     plt.xlabel("#iteration")
-    #     plt.ylabel("loss")
-    #     plt.plot(loss_history, 'b')
-    #     plt.show()
 
-    print('Current loss: %f' % loss)
+plt.figure(2,figsize=(8, 6))
+plt.title("Train and Test Loss")
+plt.xlabel("#Epochs")
+plt.ylabel("loss")
+plt.plot(train_loss_history, 'b')
+plt.plot(test_loss_history, 'r')
+plt.legend(['train loss', 'test loss'])
+plt.pause(1)
+plt.show(block=False)
 
-# for i in range(n_epoch):
-#     loss = 0
-#     for i in range(0, 1000):
-#         net.zero_grad_params()
-#
-#         # Forward
-#         pred = net.forward(train_data[i])
-#         loss += net_loss.forward(pred, train_target[i])
-#
-#         # Backward
-#         lg = net_loss.backward(pred, train_target[i])
-#         net.backward(lg)
-#
-#         # Update weights
-#         sgd(net.get_params(),
-#             net.get_grad_params(),
-#             optimizer_config)
-#     loss_history.append(loss)
-#
-#     print('Current loss: %f' % loss)
 
 train_res = net.forward(train_data)
-print("Number of errors on a train set: " + str(compute_nb_errors(train_res, train_target)))
+errors_train = compute_nb_errors(train_res, train_target)
+print("Number of errors on a train set: " + str(errors_train))
 train_res = train_res.argmax(1)
 train_res[train_res != train_target.argmax(1)] = 2
 
 test_res = net.forward(test_data)
-print("Number of errors on a test set: " + str(compute_nb_errors(test_res, test_target)))
+errors_test = compute_nb_errors(test_res, test_target)
+print("Number of errors on a test set: " + str(errors_test))
 test_res = test_res.argmax(1)
 test_res[test_res != test_target.argmax(1)] = 2
 
-plt.figure(figsize=(6, 6))
+plt.figure(3,figsize=(10, 5))
+plt.subplot(1, 2, 1)
 plt.scatter(train_data[:, 0], train_data[:, 1], c=train_res, edgecolors="none")
-plt.title('On Train Data')
-plt.show()
+plt.title(f'On Train Data, {errors_train} errors')
 
-plt.figure(figsize=(6, 6))
+plt.subplot(1, 2, 2)
 plt.scatter(test_data[:, 0], test_data[:, 1], c=test_res, edgecolors="none")
-plt.title('On Test Data')
+plt.title(f'On Test Data, {errors_test} errors')
 plt.show()
