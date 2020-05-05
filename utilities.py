@@ -2,7 +2,11 @@ import torch
 import math
 
 
-def generate_disc_set(nb):
+def generate_disc_set(nb, random_state = -1):
+
+    if random_state > 0:
+        torch.manual_seed(random_state)
+
     data = torch.FloatTensor(nb, 2).uniform_(0, 1)
     target = torch.zeros(nb, 2)
 
@@ -30,10 +34,17 @@ def get_batches(X, Y, batch_size):
 
 
 def compute_nb_errors(output, data_target):
-    nb_errors = 0
-
     output = output.argmax(1)
     target = data_target.argmax(1)
-    nb_errors += int((output != target).sum())
+    nb_errors = (output != target).sum().item()
 
     return nb_errors
+
+
+def accuracy(output, data_target):
+    output = output.argmax(1)
+    target = data_target.argmax(1)
+
+    correct = (output==target).sum().item()
+
+    return correct/len(target)
