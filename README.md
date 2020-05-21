@@ -25,7 +25,9 @@ loss.py - this is a .py file implementing neural network loss functions. It cont
 
 utilities.py - this is a .py file containig several utility methods such as generating the data for the given binary classification problem, computing the accuracy of the neural net, etc.
 
-test.py - this is the main executable pyhton file which trains and evaluates the two deep neural network models described in the report. 
+test.py - this is the main executable python file which trains and evaluates the two deep neural network models described in the report. 
+
+#### How to run
 
 To run the (default) model with the MSE loss: ```python3 test.py```\
 To run the model with the softmax loss: ```pyhton3 test.py --loss softmax_loss```
