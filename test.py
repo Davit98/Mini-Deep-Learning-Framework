@@ -58,7 +58,7 @@ def main(args):
                          DenseLayer(25, 25),
                          ReLU(),
                          DenseLayer(25, 2))
-    else:
+    elif args.loss == 'softmax_loss':
         net_loss = CrossEntropy()
         net = Sequential(DenseLayer(2, 25),
                          ReLU(), 
@@ -68,6 +68,8 @@ def main(args):
                          ReLU(), 
                          DenseLayer(25, 2), 
                          SoftMax())
+    else:
+        raise ValueError(args.loss + ' is invalid loss. Please use either \'mse\' or \'softmax_loss\'.')
 
 
     def sgd(x, dx, config):
