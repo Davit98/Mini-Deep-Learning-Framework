@@ -138,13 +138,13 @@ def main(args):
 
     train_res = net.forward(train_data)
     errors_train = compute_nb_errors(train_res, train_target)
-    print("Number of errors on a train set: " + str(errors_train))
+    print("Number of errors on the train set: " + str(errors_train))
     train_res = train_res.argmax(1)
     train_res[train_res != train_target.argmax(1)] = 2
 
     test_res = net.forward(test_data)
     errors_test = compute_nb_errors(test_res, test_target)
-    print("Number of errors on a test set: " + str(errors_test))
+    print("Number of errors on the test set: " + str(errors_test))
     test_res = test_res.argmax(1)
     test_res[test_res != test_target.argmax(1)] = 2
 
