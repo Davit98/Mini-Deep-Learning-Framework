@@ -27,5 +27,5 @@ utilities.py - this is a .py file containig several utility methods such as gene
 
 test.py - this is the main executable pyhton file which trains and evaluates the two deep neural network models described in the report. 
 
-To run the (default) model with the MSE loss: ```python3 test.py```
+To run the (default) model with the MSE loss: ```python3 test.py```\
 To run the model with the softmax loss: ```pyhton3 test.py --loss softmax_loss```
