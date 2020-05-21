@@ -30,4 +30,4 @@ test.py - this is the main executable python file which trains and evaluates the
 #### How to run
 
 To run the (default) model with the MSE loss: ```python3 test.py```\
-To run the model with the softmax loss: ```pyhton3 test.py --loss softmax_loss```
+To run the model with the softmax loss: ```python3 test.py --loss softmax_loss```
